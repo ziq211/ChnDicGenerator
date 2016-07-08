@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contentSource active="true">
+  <displayName>ScanWikiDump</displayName>
+  <schedules>
+    <schedule action="start" actionProperties="full" type="manually"/>
+  </schedules>
+  <normalizedName>ScanWikiDump</normalizedName>
+</contentSource>

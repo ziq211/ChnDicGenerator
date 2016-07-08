@@ -1,0 +1,17 @@
+<dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+  <!-- SAMPLE DXF Form Template -->
+  <!-- DXF stands for "Dynamic XML Forms". It provides a component-friendly method for 
+       editing XML configurations. -->
+  <!-- This particular sample is for editing properties for the
+       application specified by "application.xml". If you have no such properties,
+       you can delete this file. -->
+
+  <properties>
+	<HostName display="Hostname or IP" type="string" default="server.com">
+		<dxf:help>Hostname or ip address.</dxf:help>
+	</HostName>
+	<debug display="Debug" type="boolean">
+		<dxf:help>Check if you want debug messages enabled.</dxf:help>
+	</debug>
+  </properties>
+</dxf:template>

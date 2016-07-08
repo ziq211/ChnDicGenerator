@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?><workflow version="17">
+  <templates>
+    <template id="Boolean" type="choice">
+      <description>Boolean</description>
+      <ruleDescription>Test '${field}' for "${value}"</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to test</dxf:help>
+            </field>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field given contains a byte array, convert this to a string before comparision</dxf:help>
+            </convert>
+            <value display="Value" type="string" allowEmptyString="true">
+              <dxf:help>The value to test for</dxf:help>
+            </value>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        f = ""
+        if (doc.get("${field}") != null)
+          f = doc.get("${field}").getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        if (!(f instanceof String))
+          f = doc.get("${field}").getText()
+        f == "${value}"
+      
+    ]]></script>
+    </template>
+    <template id="Dump-Document" type="script">
+      <description>Dump the document to the console</description>
+      <ruleDescription>Dump the document to the console (${mode})</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <mode display="Display mode" type="pulldown">
+              <dxf:help>The format of the document display (xml/json)</dxf:help>
+              <dxf:option display="XML">XML</dxf:option>
+              <dxf:option display="JSON">JSON</dxf:option>
+            </mode>
+            <pretty display="Pretty" type="boolean" default="false">
+              <dxf:help>Use the "pretty" format</dxf:help>
+            </pretty>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        if ("${mode}" == "JSON")
+          println doc?.toJsonString(${pretty})
+        else
+          println doc?.toXmlString(${pretty})
+      
+    ]]></script>
+    </template>
+    <template id="Exception" type="script">
+      <description>Raises an exception</description>
+      <ruleDescription>Exception: "${msg}"</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <msg display="Message" type="string" validations="required">
+              <dxf:help>The exception message</dxf:help>
+            </msg>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.services.AspireException
+        throw new AspireException("WorkflowException", "${msg}")
+      
+    ]]></script>
+    </template>
+    <template id="Exception-Conditional" type="script">
+      <description>Conditionally raises an exception</description>
+      <ruleDescription>Exception when '${field}' equals '${value}': '${msg}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <msg display="Message" type="string" validations="required">
+              <dxf:help>The exception message</dxf:help>
+            </msg>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to test</dxf:help>
+            </field>
+            <value display="Value" type="string" allowEmptyString="true">
+              <dxf:help>The value that will cause the exception</dxf:help>
+            </value>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field given contains a byte array, convert this to a string before comparision</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.services.AspireException
+        f = ""
+
+        if (doc.get("${field}") != null)
+          f = doc.get("${field}").getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        if (!(f instanceof String))
+          f = doc.get("${field}").getText()
+        if (f == "${value}")
+          throw new AspireException("WorkflowException", "${msg}")
+      
+    ]]></script>
+    </template>
+    <template id="Exclude-By-File-Ext" type="script">
+      <description>Check if the file extension matches (or not does not match) the given pattern</description>
+      <ruleDescription>Exclude-By-File-Ext '${value}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <value display="Pattern" type="string" validations="required" placeholder="e.g: txt|zip|doc">
+              <dxf:help>Specify the regular expression with which to filter the file extension by</dxf:help>
+            </value>
+            <matches display="Matches?" type="boolean" default="true" validations="required">
+              <dxf:help>Check this box to exclude files whose extension matches the given patten.
+              Unchecked, files will be excluded if their extension does NOT match the given pattern</dxf:help>
+            </matches>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+      import java.util.regex.Matcher
+
+      def url = doc.url?.text()
+      if (url == null){
+         url = doc.connectorSpecific?.url?.text()
+      }
+
+      if(url != null){
+        def urlSplited = url.split("/")
+
+        if (urlSplited.size() < 2){
+          urlSplited = url.split("\\\\")
+        }
+
+        def fileName = urlSplited[urlSplited.size() - 1]
+        def nameSplited = fileName.split("\\.")
+
+        if (nameSplited.size() > 1){
+          def ext = nameSplited[nameSplited.size() - 1]
+
+          if(${matches}){
+            if (ext?.matches("${value}")){
+              job.terminate()
+            }
+          }
+          else{
+            if (!ext?.matches("${value}")){
+              job.terminate()
+            }
+          }
+        }
+      }
+      
+    ]]></script>
+    </template>
+    <template id="Exclude-By-File-Size" type="script">
+      <description>Check if the file size, is between the range</description>
+      <ruleDescription>Exclude-By-File-Size between: '${minValue}' and '${maxValue}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <minValue display="Min Size" type="integer" validations="required,integer" min="-1">
+              <dxf:help>Specify the min size in bytes. If you use -1 here, the min value will be infinite</dxf:help>
+            </minValue>
+            <maxValue display="Max Size" type="integer" validations="required,integer" min="-1">
+              <dxf:help>Specify the max size in bytes. If you use -1 here, the min value will be infinite</dxf:help>
+            </maxValue>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        def docSize = null;
+
+        if(doc.get("dataSize") != null)
+          docSize = doc.get("dataSize").text()
+
+        if(docSize != null) {
+          try{
+            docSize = docSize.toLong()
+          }
+            catch(Exception e){
+          }
+
+          def minValue = ${minValue}.toLong()
+          def maxValue = ${maxValue}.toLong()
+
+          if(minValue == -1){
+            if(docSize <= maxValue){
+              job.terminate()
+            }
+          }
+          else if(maxValue == -1){
+            if(docSize >= minValue){
+              job.terminate()
+            }
+          }
+          else{
+            if(minValue <= docSize && maxValue >= docSize){
+              job.terminate()
+            }
+          }
+        }
+      
+    ]]></script>
+    </template>
+    <template id="Exclude-By-Name" type="script">
+      <description>Check if the name, match or not with the pattern</description>
+      <ruleDescription>Exclude-By-Name: '${value}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <matches display="Matches?" type="boolean" validations="required">
+              <dxf:help>Check if the pattern has to match with the value</dxf:help>
+            </matches>
+            <value display="Pattern" type="string" validations="required">
+              <dxf:help>Specify regex pattern to filter the container name or the file name (it includes the extension)</dxf:help>
+            </value>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+      import java.util.regex.Matcher
+
+      def url = doc.url?.text()
+
+      if (url == null){
+        url = doc.connectorSpecific?.url?.text()
+      }
+
+      if(url != null){
+        def urlSplited = url.split("/")
+
+        if (urlSplited.size() < 2){
+          urlSplited = url.split("\\\\")
+        }
+
+        def fileName = urlSplited[urlSplited.size() - 1]
+
+        if(${matches}){
+          if (fileName?.matches("${value}")){
+            job.terminate()
+          }
+        }
+        else{
+          if (!fileName?.matches("${value}")){
+            job.terminate()
+          }
+        }
+      }
+      
+    ]]></script>
+    </template>
+    <template id="Field-Copy" type="script">
+      <description>Copies a field</description>
+      <ruleDescription>Copy '${source}' to '${dest}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <dest display="Destination field name" type="string" validations="required">
+              <dxf:help>The document field to set</dxf:help>
+            </dest>
+            <source display="Source field name" type="string" validations="required">
+              <dxf:help>The document field containing the value</dxf:help>
+            </source>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the source field contains a byte array, convert this to a string when copying</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        f = ""
+        if (doc.get("${source}") != null)
+          f = doc.get("${source}").getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        doc.add("${dest}", f)
+      
+    ]]></script>
+    </template>
+    <template id="Field-CopyDefault" type="script">
+      <description>Check a field is set and if not, copy from another</description>
+      <ruleDescription>Default '${dest}' from '${source}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <dest display="Destination field name" type="string" validations="required">
+              <dxf:help>The document field to set if it's empty</dxf:help>
+            </dest>
+            <source display="Source field name" type="string" validations="required">
+              <dxf:help>The document field containing the value</dxf:help>
+            </source>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the source field contains a byte array, convert this to a string when copying</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.framework.utilities.StringUtilities
+        val = ""
+        if (doc.get("${dest}") != null)
+          val = doc.getContent("${dest}")
+        if (StringUtilities.isEmpty(val) && doc.get("${source}") != null) {
+          f = doc.getContent("${source}")
+          if (${convert} && f instanceof byte[])
+            f = new String(f)
+          doc.set("${dest}", f)
+        }
+      
+    ]]></script>
+    </template>
+    <template id="Field-Default" type="script">
+      <description>Check a field is set, using the default if not</description>
+      <ruleDescription>Default '${field}' to '${defVal}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to check and set</dxf:help>
+            </field>
+            <defVal display="Default" type="string" allowEmptyString="true">
+              <dxf:help>The value to use if the field is not set</dxf:help>
+            </defVal>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.framework.utilities.StringUtilities
+        val = ""
+        if (doc.get("${field}") != null)
+          val = doc.${field}?.getText()
+        if (StringUtilities.isEmpty(val))
+          doc.set("${field}", "${defVal}")
+      
+    ]]></script>
+    </template>
+    <template id="Field-Equals" type="choice">
+      <description>Tests if a field equals another</description>
+      <ruleDescription>Test '${field1}' equals '${field2}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field1 display="Field one" type="string" validations="required">
+              <dxf:help>The document field to compare</dxf:help>
+            </field1>
+            <field2 display="Field two" type="string" validations="required">
+              <dxf:help>The document field to compare</dxf:help>
+            </field2>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field contains a byte array, convert this to a string before comparision</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.framework.utilities.StringUtilities;
+        f1 = ""
+        f2 = ""
+
+        if (doc.get("${field1}") != null)
+          f1 = doc.get("${field1}").getContent()
+        if (${convert} && f1 instanceof byte[])
+          f1 = new String(f1)
+
+        if (doc.get("${field2}") != null)
+          f2 = doc.get("${field2}").getContent()
+        if (${convert} && f2 instanceof byte[])
+          f2 = new String(f2)
+        f1 == f2
+      
+    ]]></script>
+    </template>
+    <template id="Field-IsEmpty" type="choice">
+      <description>Tests if a field is empty</description>
+      <ruleDescription>Test '${field}' is empty'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to test</dxf:help>
+            </field>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field given contains a byte array, convert this to a string before comparision</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.framework.utilities.StringUtilities
+        f = ""
+        if (doc.get("${field}") != null)
+          f = doc.${field}?.getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        if (!(f instanceof String))
+          f = doc.get("${field}").getText()
+        StringUtilities.isEmpty(f)
+      
+    ]]></script>
+    </template>
+    <template id="Field-MultiCopy" type="script">
+      <description>Copy a number of fields from one to another</description>
+      <ruleDescription>Multiple field copy: ${desc}</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <desc display="Copy description" type="string" validations="required">
+              <dxf:help>A description of the fields being copied</dxf:help>
+            </desc>
+
+            <copyFields escapeValue="true">
+              <fields>
+                <dxf:h2>Fields</dxf:h2>
+                <field multiple="true" minCount="1">
+                  <src display="Source field" type="string" placeholder="e.g. src" validations="required">
+                    <dxf:help>The name of the field to copy from</dxf:help>
+                  </src>
+                  <dest display="Destination field" type="string" placeholder="e.g. dest" validations="required">
+                    <dxf:help>The name of the field to copy to</dxf:help>
+                  </dest>
+                </field>
+              </fields>
+            </copyFields>
+
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the source field contains a byte array, convert this to a string when copying</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.services.AspireObject
+
+        // Parse the field in to an object
+        AspireObject copyFields = AspireObject.createFromXML(new StringReader("${copyFields}"));
+
+        // Loop for each field
+        copyFields.getAll("field").each() {
+          // Get the field names
+          src = it.get("src").getText();
+          dest = it.get("dest").getText();
+
+          // Create the code to run
+          if (${convert}) {
+            code = "x." + dest + "=((x." + src + ".getContent() instanceof byte[]) ? new String(x." + src + ".getContent()) : x." + src + ".getContent())";
+          }
+          else {
+            code = "x." + dest + "=x." + src + ".getContent()";
+          }
+
+          // Run it, passing the doc
+          try {
+            Eval.x(doc, code);
+          }
+          catch (e) {
+            // do nothing
+          }
+        }
+      
+    ]]></script>
+    </template>
+    <template id="Field-Set" type="script">
+      <description>Assigns a string value to a field</description>
+      <ruleDescription>Set '${field}' to '${value}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to set</dxf:help>
+            </field>
+            <value display="Value" type="string" allowEmptyString="true">
+              <dxf:help>The value to set</dxf:help>
+            </value>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[doc.set("${field}", "${value}")]]></script>
+    </template>
+    <template id="Log" type="script">
+      <description>Log a message to the workflow component</description>
+      <ruleDescription>${level}: "${msg} ${field}"</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <level display="Severity" type="pulldown">
+              <dxf:help>The scheduled update frequence for scanning the database.</dxf:help>
+              <dxf:option display="Info">Info</dxf:option>
+              <dxf:option display="Warn">Warn</dxf:option>
+              <dxf:option display="Error">Error</dxf:option>
+              <dxf:option display="Debug">Debug</dxf:option>
+            </level>
+            <msg display="Message" type="string" validations="required">
+              <dxf:help>The message to log</dxf:help>
+            </msg>
+            <field display="Field" type="string" allowEmptyString="true">
+              <dxf:help>The document field to log (optional)</dxf:help>
+            </field>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        import com.searchtechnologies.aspire.framework.utilities.StringUtilities
+        def f = "";
+        if (StringUtilities.isNotEmpty("${field}"))
+          f = doc.getContent("${field}")
+        if ("${level}" == "Debug")
+          component.debug("%s %s", "${msg}", f);
+        else if ("${level}" == "Warn")
+          component.warn("%s %s", "${msg}", f);
+        else if ("${level}" == "Error")
+          component.error("%s %s", "${msg}", f);
+        else
+          component.info("%s %s", "${msg}", f);
+      
+    ]]></script>
+    </template>
+    <template id="Switch" type="choice">
+      <description>Switch</description>
+      <ruleDescription>Switch on '${field}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to test</dxf:help>
+            </field>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field given contains a byte array, convert this to a string</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        f = ""
+        if (doc.get("${field}") != null)
+          f = doc.get("${field}").getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        f
+      
+    ]]></script>
+    </template>
+    <template id="Switch-Custom" type="choice">
+      <description>Custom switch</description>
+      <ruleDescription>Switch: ${desc}</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <desc display="Description" type="string" placeholder="Custom test" default="Custom Test" validations="required">
+              <dxf:help>Description of the test being performed</dxf:help>
+            </desc>
+            <script display="Script" type="textarea"  placeholder="return &quot;value&quot;;" default="return &quot;value&quot;;" validations="required">
+              <dxf:help>Enter a custom groovy script for your condition. This script should return
+              a value. This value can then be compared using child conditions</dxf:help>
+            </script>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[${script}]]></script>
+    </template>
+    <template id="Terminate" type="script">
+      <description>Terminates the job</description>
+      <ruleDescription>Terminate job</ruleDescription>
+      <script><![CDATA[job.terminate()]]></script>
+    </template>
+    <template id="Terminate-Conditional" type="script">
+      <description>Conditionally terminates the job</description>
+      <ruleDescription>Terminate job when '${field}' equals '${value}'</ruleDescription>
+      <dxf><![CDATA[
+      
+        <dxf:template version="1.0" xmlns:dxf="http://www.searchtechnologies.com/DXF/2011">
+          <properties>
+            <field display="Field name" type="string" validations="required">
+              <dxf:help>The document field to test</dxf:help>
+            </field>
+            <value display="Value" type="string" allowEmptyString="true">
+              <dxf:help>The value that will cause the job to terminate</dxf:help>
+            </value>
+            <convert display="Convert byte array" type="boolean" default="true">
+              <dxf:help>If the field given contains a byte array, convert this to a string before comparision</dxf:help>
+            </convert>
+          </properties>
+        </dxf:template>
+      
+    ]]></dxf>
+      <script><![CDATA[
+      
+        f = ""
+        if (doc.get("${field}") != null)
+          f = doc.get("${field}").getContent()
+        if (${convert} && f instanceof byte[])
+          f = new String(f)
+        if (!(f instanceof String))
+          f = doc.get("${field}").getText()
+        if (f.equals("${value}"))
+          job.terminate()
+      
+    ]]></script>
+    </template>
+  </templates>
+  <rules>
+    <rule appName="/ExtractWikiPages" config="com.searchtechnologies.aspire:wiki-page-extractor-app:1.0-SNAPSHOT" id="1" type="application">
+      <description>ExtractWikiPages</description>
+      <properties>
+        <property name="debug">false</property>
+        <property name="HostName">localhost</property>
+      </properties>
+    </rule>
+    <rule id="2" template="Dump-Document" type="script">
+      <description>Dump the document to the console (XML)</description>
+      <properties>
+        <property name="mode">XML</property>
+        <property name="pretty">true</property>
+      </properties>
+    </rule>
+  </rules>
+  <plans>
+    <plan name="onAddUpdate">
+      <reference rid="1"/>
+    </plan>
+    <plan name="onPublish">
+      <reference rid="2"/>
+    </plan>
+  </plans>
+  <applications>
+    <application config="com.searchtechnologies.aspire:wiki-page-extractor-app:1.0-SNAPSHOT" name="/ExtractWikiPages">
+      <properties>
+        <property name="debug">false</property>
+        <property name="HostName">localhost</property>
+      </properties>
+    </application>
+  </applications>
+</workflow>

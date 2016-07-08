@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connectorSource>
+  <url>C:\Users\zqin\Downloads\ChineseSegmentation\dump\test</url>
+  <partialScan>false</partialScan>
+  <subDirUrl/>
+  <indexContainers>false</indexContainers>
+  <scanRecursively>false</scanRecursively>
+  <scanExcludedItems>false</scanExcludedItems>
+  <useACLs>false</useACLs>
+  <acls/>
+  <includes/>
+  <excludes/>
+</connectorSource>

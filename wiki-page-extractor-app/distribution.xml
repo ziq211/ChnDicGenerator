@@ -1,0 +1,137 @@
+<assembly>
+  <id>${distribution.id}</id>
+  <formats>
+    <format>${distribution.format}</format>
+  </formats>
+  <includeBaseDirectory>${distribution.incBase}</includeBaseDirectory>
+  <dependencySets>
+    <!-- boot loader -->
+    <dependencySet>
+      <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <outputDirectory>bundles/boot</outputDirectory>
+      <includes>
+        <include>com.searchtechnologies.aspire:${aspire.bootloader}</include>
+      </includes>
+    </dependencySet>
+    <!-- Aspire bundles -->
+    <dependencySet>
+      <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <outputDirectory>bundles/aspire</outputDirectory>
+      <includes>
+        <include>com.searchtechnologies.aspire:*</include>
+      </includes>
+      <excludes>
+        <exclude>${artifact.groupId}:${artifact.artifactId}:jar:${artifact.baseVersion}</exclude>
+        <exclude>com.searchtechnologies.aspire:${aspire.bootloader}</exclude>
+      </excludes>
+    </dependencySet>
+    <!-- felix (-> bin) -->
+    <dependencySet>
+      <outputFileNameMapping>felix.jar</outputFileNameMapping>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>org.apache.felix:org.apache.felix.main</include>
+      </includes>
+    </dependencySet>
+    <!-- other system bundles (-> bundles/system) -->
+    <dependencySet>
+      <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <outputDirectory>bundles/system</outputDirectory>
+      <includes>
+        <include>org.apache.felix:*</include>
+        <include>commons-fileupload:*</include>
+        <include>commons-io:*</include>
+        <include>org.apache.geronimo.bundles:*</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
+  <fileSets>
+    <!--  bin -->
+    <fileSet>
+      <directory>distribution-files/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+    </fileSet>
+    <!--  aspire bundles -->
+    <fileSet>
+      <directory>distribution-files/bundles/aspire</directory>
+      <outputDirectory>bundles/aspire</outputDirectory>
+    </fileSet>
+    <!--  system bundles -->
+    <fileSet>
+      <directory>distribution-files/bundles/system</directory>
+      <outputDirectory>bundles/system</outputDirectory>
+    </fileSet>
+    <!-- config directory unfiltered - all but felix.properties -->
+    <fileSet>
+      <directory>distribution-files/config</directory>
+      <outputDirectory>config</outputDirectory>
+      <excludes>
+        <exclude>
+          felix.properties
+        </exclude>
+        <exclude>
+          felix.properties.aspiresh
+        </exclude>
+        <exclude>
+          felix.properties.hadoop
+        </exclude>
+        <exclude>
+          felix-template.properties
+        </exclude>
+      </excludes>
+    </fileSet>
+    <!-- config directory filtered - felix.properties -->
+    <fileSet>
+      <filtered>true</filtered>
+      <directory>distribution-files/config</directory>
+      <outputDirectory>config</outputDirectory>
+      <includes>
+        <include>
+          felix.properties
+        </include>
+        <include>
+          felix.properties.aspiresh
+        </include>
+        <include>
+          felix.properties.hadoop
+        </include>
+        <include>
+          felix-template.properties
+        </include>
+      </includes>
+    </fileSet>
+    <!-- data -->
+    <fileSet>
+      <directory>distribution-files/data</directory>
+      <outputDirectory>data</outputDirectory>
+    </fileSet>
+    <!-- lib -->
+    <fileSet>
+      <directory>distribution-files/lib</directory>
+      <outputDirectory>lib</outputDirectory>
+    </fileSet>
+    <!-- log -->
+    <fileSet>
+      <directory>distribution-files/log</directory>
+      <outputDirectory>log</outputDirectory>
+    </fileSet>
+    <!-- resources -->
+    <fileSet>
+      <directory>distribution-files/resources</directory>
+      <outputDirectory>resources</outputDirectory>
+    </fileSet>
+    <!-- web -->
+    <fileSet>
+      <directory>distribution-files/web</directory>
+      <outputDirectory>web</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>

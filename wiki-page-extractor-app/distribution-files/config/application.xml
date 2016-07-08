@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application name="ExtractWikiPages">
+  
+  <components>
+    <component name="Main" subType="pipeline"
+      factoryName="aspire-application">
+      <components>
+
+        <component name="DecompressGZ" subType="gzDecompressStream" factoryName="aspire-archive-formats" />
+
+        <component name="XMLSubJobExtractor" subType="xmlSubJobExtractor" factoryName="aspire-xml-files">
+          <rootNode>/mediawiki</rootNode>
+          <branches>
+            <branch event="onSubJob" pipelineManager="../WorkflowPipelineManager"
+                    pipeline="workflowPipeline"/>
+          </branches>
+        </component>
+      </components>
+      <pipelines>
+        <pipeline name="doc-process" default="true">
+          <stages>
+            <stage component="DecompressGZ" />
+            <stage component="XMLSubJobExtractor" />
+          </stages>
+        </pipeline>
+      </pipelines>
+    </component>
+
+
+    <component name="WorkflowPipelineManager" subType="pipeline" factoryName="aspire-application">
+      <queueSize>50</queueSize>
+      <maxThreads>20</maxThreads>
+
+      <pipelines>
+        <pipeline name="workflowPipeline" default="true">
+          <stages>
+            <stage component="PublishWorkflow" />
+          </stages>
+        </pipeline>
+      </pipelines>
+
+      <components>
+        <component name="PublishWorkflow" subType="default"
+                   factoryName="aspire-business-rules">
+          <debug>${debug}</debug>
+          <plan reload="15h" file="config/content-sources/ScanWikiDump/workflow.xml"
+                id="onPublish" errorTolerant="true" />
+        </component>
+      </components>
+    </component>
+  </components>
+</application>

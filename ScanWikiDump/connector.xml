@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application config="com.searchtechnologies.aspire:aspire-filesystem-source">
+  <properties>
+    <property name="useGE">false</property>
+    <property name="generalConfiguration">true</property>
+    <property name="debug">false</property>
+    <property name="wDebug">false</property>
+    <property name="enableAuditing">true</property>
+    <property name="hierarchyCacheSize">5000</property>
+    <property name="scanThreads">1</property>
+    <property name="scanQueue">1</property>
+    <property name="processThreads">20</property>
+    <property name="processQueue">200</property>
+    <property name="claimSleep">1s</property>
+    <property name="statusUpdateTime">1s</property>
+    <property name="statisticsUpdateTime">5s</property>
+    <property name="useBulk">false</property>
+    <property name="bulkSize">1000</property>
+    <property name="bulkTimeout">1000</property>
+    <property name="batchSize">50</property>
+    <property name="batchTimeout">60000</property>
+    <property name="emitStartJob">true</property>
+    <property name="emitEndJob">true</property>
+    <property name="waitForSubJobs">600000</property>
+    <property name="disableTextExtract">true</property>
+    <property name="extractTextMaxSize">unlimited</property>
+    <property name="extractTimeout">180000</property>
+    <property name="enable-non-text-filter">true</property>
+    <property name="non-text-document">true</property>
+    <property name="nonTextDocumentsExtensions">jpg,jpeg,gif,png,tif,mp3,mp4,mpg,mpeg,avi,mkv,wav,bmp,swf,war,rar,tgz,dll,exe,class</property>
+    <property name="enableFetchUrl">true</property>
+    <property name="workflowReloadPeriod">15s</property>
+    <property name="workflowErrorTolerant">false</property>
+    <property name="fullRecovery">incremental</property>
+    <property name="incrementalRecovery">incremental</property>
+    <property name="maxRetries">3</property>
+    <property name="fdService">false</property>
+    <property name="fdServiceUrl"/>
+  </properties>
+</application>

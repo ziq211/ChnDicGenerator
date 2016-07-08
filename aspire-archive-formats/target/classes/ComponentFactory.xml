@@ -1,0 +1,9 @@
+<componentFactory name="aspire-archive-formats">
+  <subType name="bzip2DecompressStream" implementation="com.searchtechnologies.aspire.components.AspireBZip2ExpanderStage">
+    <description>Expands a single BZip2 file, takes in a stream and produces a stream</description>
+  </subType>
+  <subType name="gzDecompressStream" implementation="com.searchtechnologies.aspire.components.AspireGZExpanderStage">
+    <description>Expands a single GZ file, takes in a stream and produces a stream</description>
+  </subType>
+</componentFactory>
+
